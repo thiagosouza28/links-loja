@@ -27,12 +27,16 @@ function readLinks() {
 }
 
 // Função para salvar os links no arquivo JSON de forma segura
-function saveLinks(links) {
-  try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(links, null, 2), 'utf-8');
-  } catch (error) {
-    console.error("Erro ao salvar os dados:", error);
-  }
+function saveLinks(links, res = null) {
+  fs.writeFile(DATA_FILE, JSON.stringify(links, null, 2), 'utf-8', (err) => {
+    if (err) {
+      console.error("Erro ao salvar os dados:", err);
+      if (res) res.status(500).json({ error: "Erro ao salvar os dados" });
+    } else {
+      console.log("Dados salvos com sucesso!");
+      if (res) res.json({ message: 'Operação realizada com sucesso!' });
+    }
+  });
 }
 
 // Endpoint para obter todos os links
@@ -58,9 +62,7 @@ app.post('/api/links', (req, res) => {
   }
 
   links.push({ nome, url });
-  saveLinks(links);
-
-  res.json({ message: 'Link cadastrado com sucesso!' });
+  saveLinks(links, res);
 });
 
 // Endpoint para deletar um link pelo nome
@@ -74,8 +76,7 @@ app.delete('/api/links/:nome', (req, res) => {
     return res.status(404).json({ error: 'Link não encontrado' });
   }
 
-  saveLinks(filteredLinks);
-  res.json({ message: 'Link removido com sucesso!' });
+  saveLinks(filteredLinks, res);
 });
 
 // Servindo arquivos estáticos da pasta 'public'
